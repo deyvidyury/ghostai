@@ -1,10 +1,19 @@
 "use client"
 
+import { useEffect, useRef } from "react"
 import { Plus, X } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements(container: HTMLElement | null): HTMLElement[] {
+  if (!container) return []
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE))
+}
 
 interface ProjectSidebarProps {
   isOpen: boolean
@@ -17,8 +26,56 @@ export function ProjectSidebar({
   onClose,
   className,
 }: ProjectSidebarProps) {
+  const sidebarRef = useRef<HTMLElement>(null)
+  const previousFocusRef = useRef<HTMLElement | null>(null)
+
+  // Move focus into sidebar on open; return it on close
+  useEffect(() => {
+    if (isOpen) {
+      previousFocusRef.current = document.activeElement as HTMLElement
+      const focusable = getFocusableElements(sidebarRef.current)
+      focusable[0]?.focus()
+    } else {
+      previousFocusRef.current?.focus()
+    }
+  }, [isOpen])
+
+  // Escape key closes the sidebar
+  useEffect(() => {
+    if (!isOpen) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose()
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isOpen, onClose])
+
+  // Focus trap: cycle Tab / Shift+Tab within the sidebar
+  function handleTabTrap(e: React.KeyboardEvent) {
+    if (e.key !== "Tab") return
+    const focusable = getFocusableElements(sidebarRef.current)
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+  }
+
   return (
     <aside
+      ref={sidebarRef}
+      role="complementary"
+      aria-label="Project navigation"
+      onKeyDown={handleTabTrap}
       className={cn(
         "fixed left-0 top-0 z-50 flex h-full w-64 flex-col bg-card border-r border-border",
         "transition-transform duration-200 ease-in-out",

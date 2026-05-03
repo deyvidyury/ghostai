@@ -30,6 +30,7 @@ export function EditorNavbar({
           size="icon"
           onClick={onToggleSidebar}
           aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+          aria-expanded={sidebarOpen}
         >
           {sidebarOpen ? (
             <PanelLeftClose className="h-5 w-5" />
