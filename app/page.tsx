@@ -1,10 +1,11 @@
-import { Button } from "@/components/ui/button";
+import { EditorLayout } from "@/components/editor/editor-layout"
 
 export default function Home() {
   return (
-    <div className="flex h-screen items-center justify-center">
-      <span>Ghost AI</span>
-      <Button>Click Me</Button>
-    </div>
-  );
+    <EditorLayout>
+      <div className="flex flex-1 items-center justify-center">
+        <span className="text-muted-foreground text-sm">Editor canvas</span>
+      </div>
+    </EditorLayout>
+  )
 }
